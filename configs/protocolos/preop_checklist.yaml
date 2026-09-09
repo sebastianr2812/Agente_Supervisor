@@ -1,0 +1,79 @@
+id_protocolo: "PREOP-001"
+version: "1.0"
+proceso_sanitario: "general"
+tipo_documento: "preop_checklist"
+fecha_vigencia: "2024-01-01"
+base_legal: "N/A (documento en ingles, family: Preoperative Forms & Clinical Checklists - fuente: ClinOCR-Bench templates T10 (Medical History Checklist), T14 (Surgical Pre-Op Assessment))"
+idioma: "eng"
+
+campos_obligatorios:
+  - nombre_zona: "identificacion_centro"
+    tipo_contenido: "texto"
+    zona_documento: "header"
+    descripcion: "Hospital name"
+    patrones_esperados: ["hospital"]
+    peso: 1
+
+  - nombre_zona: "identificacion_paciente"
+    tipo_contenido: "texto"
+    zona_documento: "header"
+    descripcion: "Patient name and date of birth"
+    patrones_esperados: ["patient", "dob", "date of birth"]
+    peso: 3
+
+  - nombre_zona: "responsable_clinico"
+    tipo_contenido: "texto"
+    zona_documento: "body"
+    descripcion: "Physician or surgeon responsible for the checklist (present in pre-op assessments, not always in patient-completed history checklists)"
+    patrones_esperados: ["physician", "surgeon", "dr."]
+    peso: 1
+
+  - nombre_zona: "items_checklist"
+    tipo_contenido: "texto"
+    zona_documento: "body"
+    descripcion: "Checklist items with Yes/No or checkbox markers"
+    patrones_esperados: ["yes", "no", "history", "assessment"]
+    min_chars: 30
+    peso: 3
+
+  - nombre_zona: "firma_paciente"
+    tipo_contenido: "firma"
+    zona_documento: "signature"
+    descripcion: "Patient signature confirming the checklist information"
+    min_count: 1
+    patrones_esperados: ["patient signature", "signature"]
+    peso: 3
+
+reglas_contenido:
+  - id_regla: "RC-PREOP-001"
+    zona_documento: "body"
+    tipo: "keyword"
+    patron: ["yes", "no", "assessment", "history"]
+    obligatoria: true
+    mensaje_error: "No checklist items with Yes/No responses were found"
+    peso: 3
+
+  - id_regla: "RC-PREOP-002"
+    zona_documento: "header"
+    tipo: "keyword"
+    patron: ["dob", "date of birth"]
+    obligatoria: true
+    mensaje_error: "No patient date of birth found"
+    peso: 3
+
+reglas_coherencia:
+  - id_regla: "RCH-PREOP-001"
+    tipo: "campo_presente_si"
+    campo_origen: "items_checklist"
+    campo_destino: "responsable_clinico"
+    condicion: "If checklist items are present, a responsible physician should be identified"
+    mensaje_error: "There are checklist items but no responsible physician was found"
+    peso: 1
+
+  - id_regla: "RCH-PREOP-002"
+    tipo: "campo_presente_si"
+    campo_origen: "items_checklist"
+    campo_destino: "firma_paciente"
+    condicion: "If checklist items are present, the patient signature should confirm them"
+    mensaje_error: "There are checklist items but no patient signature was found"
+    peso: 2

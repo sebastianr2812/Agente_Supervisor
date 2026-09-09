@@ -1,0 +1,42 @@
+version: "1.0"
+description: "Esquema base para protocolos de validacion documental"
+
+estructura:
+  metadatos:
+    - id_protocolo
+    - version
+    - proceso_sanitario
+    - tipo_documento
+    - fecha_vigencia
+
+  campos_obligatorios:
+    - nombre_zona
+    - tipo_contenido
+    - zona_documento
+    - descripcion
+
+  campos_obligatorios_opcionales:
+    - patrones_esperados
+    - min_chars
+    - min_count
+    - valor_esperado
+    - patron_regex
+    - peso  # importancia relativa (float) usada en el puntaje ponderado. Default: firma=3, fecha=2, texto=2, casilla=1
+
+  reglas_contenido:
+    - id_regla
+    - zona_documento
+    - tipo
+    - patron
+    - obligatoria
+    - mensaje_error
+    - peso  # opcional. Default: 2 si obligatoria=true, 1 si obligatoria=false
+
+  reglas_coherencia:
+    - id_regla
+    - tipo
+    - campo_origen
+    - campo_destino
+    - condicion
+    - mensaje_error
+    - peso  # opcional. Default: 3

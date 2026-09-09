@@ -1,0 +1,131 @@
+id_protocolo: "PREOP-001-ES"
+version: "1.0"
+proceso_sanitario: "cirugia_preoperatorio"
+tipo_documento: "checklist_preoperatorio"
+fecha_vigencia: "2024-01-01"
+base_legal: "OMS (2009), Lista de verificacion de seguridad quirurgica"
+idioma: "spa"
+
+campos_obligatorios:
+  - nombre_zona: "identificacion_centro"
+    tipo_contenido: "texto"
+    zona_documento: "header"
+    descripcion: "Nombre del hospital"
+    # "centro" (sin mas contexto) se elimino de aqui (2026-09-07): colisiona
+    # con el aviso legal fijo "Codigo de centro sanitario: verificado..."
+    # presente en TODOS los documentos -- ver misma nota en
+    # lista_medicacion_es.yaml.
+    patrones_esperados: ["hospital", "quirofano"]
+    peso: 1
+
+  - nombre_zona: "identificacion_paciente"
+    tipo_contenido: "texto"
+    zona_documento: "header"
+    descripcion: "Nombre del paciente y fecha de nacimiento"
+    patrones_esperados: ["paciente", "nombre", "fecha de nacimiento", "nhc"]
+    peso: 3
+
+  - nombre_zona: "responsable_clinico"
+    tipo_contenido: "texto"
+    zona_documento: "body"
+    descripcion: "Cirujano o anestesiologo responsable"
+    patrones_esperados: ["cirujano", "anestesiologo", "dr.", "dra.", "responsable"]
+    peso: 1
+
+  - nombre_zona: "items_checklist"
+    tipo_contenido: "texto"
+    zona_documento: "body"
+    descripcion: "Items de verificacion con respuestas Si/No"
+    patrones_esperados: ["si", "no", "verificado", "comprobado", "alergias", "ayuno"]
+    min_chars: 30
+    peso: 3
+
+  - nombre_zona: "firma_paciente"
+    tipo_contenido: "firma"
+    zona_documento: "signature"
+    descripcion: "Firma del paciente confirmando la informacion"
+    min_count: 1
+    patrones_esperados: ["firma del paciente", "firma paciente", "firma"]
+    peso: 3
+
+  - nombre_zona: "fecha_nacimiento"
+    tipo_contenido: "fecha"
+    zona_documento: "header"
+    descripcion: "Fecha de nacimiento del paciente (campo propio, para comparar contra la fecha del documento)"
+    patrones_esperados: ["fecha de nacimiento", "f. nacimiento", "f.nac", "nacimiento"]
+    peso: 1
+    informational: true
+
+  - nombre_zona: "fecha_documento"
+    tipo_contenido: "fecha"
+    zona_documento: "header"
+    descripcion: "Fecha de emision del documento (caja de datos del documento)"
+    patrones_esperados: ["programada"]
+    peso: 1
+    informational: true
+
+reglas_contenido:
+  - id_regla: "RC-PREOP-ES-001"
+    zona_documento: "body"
+    tipo: "keyword"
+    patron: ["si", "no", "verificado", "comprobado"]
+    obligatoria: true
+    mensaje_error: "No se encontraron items de verificacion con respuestas Si/No"
+    peso: 3
+
+  - id_regla: "RC-PREOP-ES-002"
+    zona_documento: "header"
+    tipo: "keyword"
+    patron: ["fecha de nacimiento", "f. nacimiento", "nacimiento"]
+    obligatoria: true
+    mensaje_error: "No se encontro la fecha de nacimiento del paciente"
+    peso: 3
+
+reglas_coherencia:
+  - id_regla: "RCH-PREOP-ES-001"
+    tipo: "campo_presente_si"
+    campo_origen: "items_checklist"
+    campo_destino: "responsable_clinico"
+    condicion: "Si hay items de checklist, debe identificarse al responsable clinico"
+    mensaje_error: "Hay items de checklist pero no se identifico al responsable clinico"
+    peso: 1
+
+  - id_regla: "RCH-PREOP-ES-002"
+    tipo: "campo_presente_si"
+    campo_origen: "items_checklist"
+    campo_destino: "firma_paciente"
+    condicion: "Si hay items de checklist, debe existir firma del paciente"
+    mensaje_error: "Hay items de checklist pero no se encontro firma del paciente"
+    peso: 2
+
+  - id_regla: "RCH-PREOP-ES-003"
+    tipo: "texto_coherente"
+    # campo_destino = campo_origen: ver nota equivalente en RCH-MED-ES-002.
+    # La condicion es sobre items_checklist exclusivamente; responsable_clinico
+    # como destino solo introducia texto sin relacion con la condicion.
+    campo_origen: "items_checklist"
+    campo_destino: "items_checklist"
+    condicion: "Las respuestas del checklist deben ser clinicamente coherentes: los items criticos de seguridad quirurgica no deberian aparecer marcados como No sin una advertencia o justificacion asociada"
+    mensaje_error: "Las respuestas del checklist no parecen clinicamente coherentes o seguras"
+    peso: 2
+
+  - id_regla: "RCH-PREOP-ES-004"
+    tipo: "checkboxes_completos"
+    condicion: "Un checklist de seguridad quirurgica pierde su proposito si items criticos quedan sin verificar (marcados No): a diferencia de un campo de texto ausente, no requiere juicio clinico, solo contar cuantas casillas del documento estan marcadas"
+    mensaje_error: "Uno o mas items del checklist de seguridad no estan marcados como verificados"
+    peso: 3
+    proporcion_minima: 0.9
+
+  - id_regla: "RCH-PREOP-ES-005"
+    tipo: "fecha_posterior"
+    campo_origen: "fecha_nacimiento"
+    campo_destino: "fecha_documento"
+    condicion: "La fecha de nacimiento del paciente debe ser anterior a la fecha del documento"
+    mensaje_error: "La fecha de nacimiento es posterior a la fecha del documento"
+    peso: 3
+
+  - id_regla: "RCH-PREOP-ES-006"
+    tipo: "identidad_duplicada"
+    condicion: "El identificador del paciente debe ser el mismo en todo el documento"
+    mensaje_error: "Se encontraron identificadores de paciente distintos en el mismo documento"
+    peso: 3

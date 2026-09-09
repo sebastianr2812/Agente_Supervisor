@@ -1,0 +1,63 @@
+id_protocolo: "ADM-001"
+version: "1.0"
+proceso_sanitario: "general"
+tipo_documento: "patient_admission_form"
+fecha_vigencia: "2024-01-01"
+base_legal: "N/A (documento en ingles, family: Patient Admission Forms - fuente: ClinOCR-Bench template T13 (Patient Intake Form) unicamente)"
+idioma: "eng"
+
+campos_obligatorios:
+  - nombre_zona: "identificacion_centro"
+    tipo_contenido: "texto"
+    zona_documento: "header"
+    descripcion: "Hospital or facility name"
+    patrones_esperados: ["hospital", "facility"]
+    peso: 1
+
+  - nombre_zona: "identificacion_paciente"
+    tipo_contenido: "texto"
+    zona_documento: "header"
+    descripcion: "Patient full name, date of birth and MRN"
+    patrones_esperados: ["full name", "patient", "dob", "date of birth", "mrn"]
+    peso: 3
+
+  - nombre_zona: "signos_vitales_o_historial"
+    tipo_contenido: "texto"
+    zona_documento: "body"
+    descripcion: "Vital signs or medical history checklist captured at intake"
+    patrones_esperados: ["vital signs", "medical history", "bp", "pulse"]
+    min_chars: 15
+    peso: 2
+
+  - nombre_zona: "contacto"
+    tipo_contenido: "texto"
+    zona_documento: "body"
+    descripcion: "Patient contact information (phone number)"
+    patrones_esperados: ["phone", "contact"]
+    peso: 2
+
+reglas_contenido:
+  - id_regla: "RC-ADM-001"
+    zona_documento: "header"
+    tipo: "keyword"
+    patron: ["full name", "patient", "mrn"]
+    obligatoria: true
+    mensaje_error: "No patient identification found"
+    peso: 3
+
+  - id_regla: "RC-ADM-002"
+    zona_documento: "body"
+    tipo: "keyword"
+    patron: ["vital signs", "medical history", "bp"]
+    obligatoria: true
+    mensaje_error: "No intake vital signs or medical history found"
+    peso: 2
+
+reglas_coherencia:
+  - id_regla: "RCH-ADM-001"
+    tipo: "campo_presente_si"
+    campo_origen: "signos_vitales_o_historial"
+    campo_destino: "contacto"
+    condicion: "If intake information is present, patient contact details should also be captured"
+    mensaje_error: "There is intake information but no patient contact was found"
+    peso: 1

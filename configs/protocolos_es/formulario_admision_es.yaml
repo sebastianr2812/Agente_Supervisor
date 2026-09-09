@@ -1,0 +1,161 @@
+id_protocolo: "ADM-001-ES"
+version: "1.0"
+proceso_sanitario: "admision_hospitalaria"
+tipo_documento: "formulario_admision"
+fecha_vigencia: "2024-01-01"
+base_legal: "Ley 41/2002, art. 15 (historia clinica)"
+idioma: "spa"
+
+campos_obligatorios:
+  - nombre_zona: "identificacion_centro"
+    tipo_contenido: "texto"
+    zona_documento: "header"
+    descripcion: "Nombre del hospital o centro"
+    # "centro" (sin mas contexto) se elimino de aqui (2026-09-07): colisiona
+    # con el aviso legal fijo "Codigo de centro sanitario: verificado..."
+    # presente en TODOS los documentos, se declare o no esta identificacion
+    # -- ver misma nota en lista_medicacion_es.yaml.
+    patrones_esperados: ["hospital", "servicio"]
+    peso: 1
+
+  - nombre_zona: "identificacion_paciente"
+    tipo_contenido: "texto"
+    zona_documento: "header"
+    descripcion: "Nombre completo, fecha de nacimiento y NHC"
+    patrones_esperados: ["nombre completo", "paciente", "nhc", "fecha de nacimiento"]
+    peso: 3
+
+  - nombre_zona: "signos_vitales_o_historial"
+    tipo_contenido: "texto"
+    zona_documento: "body"
+    descripcion: "Signos vitales o historial medico en el ingreso"
+    patrones_esperados: ["signos vitales", "tension arterial", "pulso", "antecedentes", "historial"]
+    min_chars: 15
+    peso: 2
+
+  - nombre_zona: "contacto"
+    tipo_contenido: "texto"
+    zona_documento: "body"
+    descripcion: "Telefono o datos de contacto del paciente o familiar"
+    # "tel." se elimino de aqui (2026-09-07): el membrete de TODO documento
+    # imprime de forma fija "... | Tel. {telefono del hospital} | CIF ..."
+    # (ver draw_masthead) -- es el telefono del HOSPITAL, no del
+    # paciente/familiar, pero coincidia igual con este patron cuando el
+    # campo "contacto" especifico se omitia a proposito. "telefono" (sin
+    # abreviar) se mantiene: el membrete solo usa la forma abreviada "Tel.".
+    patrones_esperados: ["telefono", "contacto", "movil"]
+    peso: 2
+
+  - nombre_zona: "fecha_nacimiento"
+    tipo_contenido: "fecha"
+    zona_documento: "header"
+    descripcion: "Fecha de nacimiento del paciente (campo propio, para comparar contra la fecha del documento)"
+    patrones_esperados: ["fecha de nacimiento", "f. nacimiento", "f.nac", "nacimiento"]
+    peso: 1
+    informational: true
+
+  - nombre_zona: "fecha_documento"
+    tipo_contenido: "fecha"
+    zona_documento: "header"
+    descripcion: "Fecha de emision del documento (caja de datos del documento)"
+    patrones_esperados: ["ingreso:"]
+    peso: 1
+    informational: true
+
+  - nombre_zona: "medicacion_habitual"
+    tipo_contenido: "texto"
+    zona_documento: "body"
+    descripcion: "Medicacion habitual declarada del paciente"
+    patrones_esperados: ["medicacion habitual"]
+    peso: 1
+    informational: true
+
+reglas_contenido:
+  - id_regla: "RC-ADM-ES-001"
+    zona_documento: "header"
+    tipo: "keyword"
+    patron: ["nombre completo", "paciente", "nhc"]
+    obligatoria: true
+    mensaje_error: "No se encontro identificacion del paciente"
+    peso: 3
+
+  - id_regla: "RC-ADM-ES-002"
+    zona_documento: "body"
+    tipo: "keyword"
+    patron: ["signos vitales", "tension arterial", "antecedentes", "historial"]
+    obligatoria: true
+    mensaje_error: "No se encontraron signos vitales ni historial de ingreso"
+    peso: 2
+
+reglas_coherencia:
+  - id_regla: "RCH-ADM-ES-001"
+    tipo: "campo_presente_si"
+    campo_origen: "signos_vitales_o_historial"
+    campo_destino: "contacto"
+    condicion: "Si hay datos de ingreso, deben existir datos de contacto"
+    mensaje_error: "Hay datos de ingreso pero no se encontraron datos de contacto"
+    peso: 1
+
+  - id_regla: "RCH-ADM-ES-002"
+    tipo: "texto_coherente"
+    # campo_destino = campo_origen: ver nota equivalente en RCH-MED-ES-002.
+    # La condicion es sobre signos_vitales_o_historial exclusivamente;
+    # identificacion_paciente como destino solo introducia texto de
+    # membrete/legal sin relacion con la condicion.
+    campo_origen: "signos_vitales_o_historial"
+    campo_destino: "signos_vitales_o_historial"
+    condicion: "Los signos vitales o el historial registrado deben ser clinicamente coherentes y fisiologicamente plausibles, sin valores contradictorios entre si"
+    mensaje_error: "Los signos vitales o el historial registrado no parecen fisiologicamente coherentes"
+    peso: 2
+
+  - id_regla: "RCH-ADM-ES-003"
+    tipo: "rango_fisiologico"
+    campo_origen: "signos_vitales_o_historial"
+    condicion: "Los signos vitales registrados deben estar dentro de rangos fisiologicamente posibles (no requiere juicio clinico, solo limites objetivos)"
+    mensaje_error: "Uno o mas signos vitales estan fuera de un rango fisiologicamente posible"
+    peso: 3
+    parametros:
+      # Nota: no se incluye temperatura. Su valor con decimales (ej. "36.5")
+      # se corrompe de forma impredecible al perder el OCR el punto decimal
+      # (ej. "3650"), lo que producia falsos positivos en documentos validos
+      # sin un umbral fiable que los distinga del valor realmente
+      # incoherente (28.0). Los signos vitales de abajo son enteros, sin
+      # ese problema de ambiguedad decimal.
+      - nombre: "tension_sistolica"
+        patron_regex: "[Tt]ension arter\\w*[:.,]?\\s*(\\d+)\\s*/\\s*\\d+"
+        maximo: 220
+      - nombre: "tension_diastolica"
+        patron_regex: "[Tt]ension arter\\w*[:.,]?\\s*\\d+\\s*/\\s*(\\d+)"
+        minimo: 40
+        maximo: 130
+      - nombre: "frecuencia_cardiaca"
+        patron_regex: "[Ff]recuencia card\\w*[:.,]?\\s*(\\d+)"
+        minimo: 15
+        maximo: 180
+      - nombre: "saturacion_o2"
+        patron_regex: "[Ss]aturaci[oó]n\\s*[oO0]2[:.,]?\\s*(\\d+)"
+        maximo: 100
+
+  - id_regla: "RCH-ADM-ES-004"
+    tipo: "fecha_posterior"
+    campo_origen: "fecha_nacimiento"
+    campo_destino: "fecha_documento"
+    condicion: "La fecha de nacimiento del paciente debe ser anterior a la fecha del documento"
+    mensaje_error: "La fecha de nacimiento es posterior a la fecha del documento"
+    peso: 3
+
+  - id_regla: "RCH-ADM-ES-005"
+    tipo: "identidad_duplicada"
+    condicion: "El identificador del paciente debe ser el mismo en todo el documento"
+    mensaje_error: "Se encontraron identificadores de paciente distintos en el mismo documento"
+    peso: 3
+
+  - id_regla: "RCH-ADM-ES-006"
+    tipo: "ausencia_contradicha"
+    campo_origen: "medicacion_habitual"
+    campo_destino: "signos_vitales_o_historial"
+    patron_ausencia: "ninguna"
+    patrones_contradiccion: ["metformina", "enalapril", "atorvastatina", "omeprazol", "paracetamol", "ibuprofeno", "apixaban", "levotiroxina", "salbutamol", "amoxicilina", "en tratamiento con"]
+    condicion: "Si se declara que no hay medicacion habitual, el historial no deberia mencionar un tratamiento farmacologico activo"
+    mensaje_error: "Se declara 'Ninguna' medicacion habitual pero el historial menciona un tratamiento activo"
+    peso: 2

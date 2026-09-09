@@ -1,0 +1,18 @@
+# Datos generados/descargados (regenerables con los scripts del repo, no se versionan por tamano)
+data/
+results_*/
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# Temporales
+*.tmp
+TFM_PathwayGuard_working.docx

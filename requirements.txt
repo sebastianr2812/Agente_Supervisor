@@ -1,0 +1,47 @@
+# Dependencias de PathwayGuard / SupervisorGuard.
+# Instalacion: pip install -r requirements.txt
+#
+# Dependencias de sistema (no se instalan con pip):
+#   - Tesseract OCR 5.x: https://github.com/UB-Mannheim/tesseract/wiki (Windows)
+#     La ruta al ejecutable se configura en src/ocr/extractor.py
+#     (pytesseract.pytesseract.tesseract_cmd) y/o con la variable de entorno
+#     TESSDATA_PREFIX.
+#   - Ollama: https://ollama.com (necesario solo si se activa la validacion
+#     semantica con --use-llm / "Enable LLM semantic check"). Tras instalarlo:
+#       ollama pull mistral:7b
+#       ollama pull qwen2.5vl:7b   (opcional, solo para el analisis visual profundo)
+#     Ollama debe estar sirviendo en http://localhost:11434 (por defecto).
+
+# OCR y procesamiento de imagen
+pytesseract==0.3.13
+opencv-python==4.9.0.80
+Pillow==10.4.0
+numpy==1.26.4
+
+# Orquestacion del agente
+langgraph==0.2.60
+
+# Protocolos y configuracion
+PyYAML==6.0.2
+
+# Generacion de las hojas de calculo de revision humana (scripts/build_human_review_sample.py)
+openpyxl==3.1.5
+
+# Interfaz web
+streamlit==1.59.2
+
+# CLI (run_supervisor.py)
+rich==13.9.4
+
+# Testing
+pytest==8.3.4
+
+# Backend LLM local alternativo (opcional, NO usado por defecto).
+# El backend por defecto de la aplicacion (app.py) y de run_supervisor.py es
+# Ollama, que se comunica por HTTP usando solo la libreria estandar (urllib),
+# sin dependencias adicionales. src/llm/mistral_client.py ofrece un backend
+# alternativo basado en llama-cpp-python + un modelo .gguf local, pero requiere
+# instalar este paquete manualmente y descargar el modelo por separado; se deja
+# comentado porque su instalacion en Windows puede fallar si la wheel
+# precompilada no es compatible con la CPU del equipo (error 0xc000001d).
+# llama-cpp-python==0.3.4

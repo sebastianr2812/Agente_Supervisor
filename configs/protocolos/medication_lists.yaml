@@ -1,0 +1,56 @@
+id_protocolo: "MED-001"
+version: "1.0"
+proceso_sanitario: "general"
+tipo_documento: "medication_list"
+fecha_vigencia: "2024-01-01"
+base_legal: "N/A (documento en ingles, family: Medication Lists - fuente: ClinOCR-Bench template T9 (Medication List))"
+idioma: "eng"
+
+campos_obligatorios:
+  - nombre_zona: "identificacion_centro"
+    tipo_contenido: "texto"
+    zona_documento: "header"
+    descripcion: "Hospital or clinic name"
+    patrones_esperados: ["hospital", "clinic", "medical center", "medicine"]
+    peso: 1
+
+  - nombre_zona: "identificacion_paciente"
+    tipo_contenido: "texto"
+    zona_documento: "header"
+    descripcion: "Patient name and date of birth"
+    patrones_esperados: ["patient", "dob"]
+    peso: 3
+
+  - nombre_zona: "medicamentos"
+    tipo_contenido: "texto"
+    zona_documento: "body"
+    descripcion: "List of medications with dosage and frequency"
+    patrones_esperados: ["mg", "dosage", "how often", "meds"]
+    min_chars: 15
+    peso: 3
+
+reglas_contenido:
+  - id_regla: "RC-MED-001"
+    zona_documento: "body"
+    tipo: "keyword"
+    patron: ["mg", "dosage"]
+    obligatoria: true
+    mensaje_error: "No medication with dosage information found"
+    peso: 3
+
+  - id_regla: "RC-MED-002"
+    zona_documento: "header"
+    tipo: "keyword"
+    patron: ["patient"]
+    obligatoria: true
+    mensaje_error: "No patient identification found"
+    peso: 3
+
+reglas_coherencia:
+  - id_regla: "RCH-MED-001"
+    tipo: "campo_presente_si"
+    campo_origen: "medicamentos"
+    campo_destino: "identificacion_paciente"
+    condicion: "If medications are listed, the patient must be identified"
+    mensaje_error: "There are medications listed but the patient is not identified"
+    peso: 3

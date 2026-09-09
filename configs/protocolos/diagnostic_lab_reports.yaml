@@ -1,0 +1,70 @@
+id_protocolo: "DLR-001"
+version: "1.0"
+proceso_sanitario: "general"
+tipo_documento: "diagnostic_lab_report"
+fecha_vigencia: "2024-01-01"
+base_legal: "N/A (documento en ingles, family: Diagnostic & Lab Reports - fuente: ClinOCR-Bench templates T1 (Imaging), T2 (Pathology), T6/T11/T12/T15 (Lab))"
+idioma: "eng"
+
+campos_obligatorios:
+  - nombre_zona: "identificacion_centro"
+    tipo_contenido: "texto"
+    zona_documento: "header"
+    descripcion: "Hospital or laboratory name"
+    patrones_esperados: ["hospital", "laboratory", "lab", "pathology"]
+    peso: 2
+
+  - nombre_zona: "identificacion_paciente"
+    tipo_contenido: "texto"
+    zona_documento: "header"
+    descripcion: "Patient name and identifier (MRN, Patient ID or Accession number)"
+    patrones_esperados: ["patient", "mrn", "patient id", "accession"]
+    peso: 3
+
+  - nombre_zona: "medico_solicitante"
+    tipo_contenido: "texto"
+    zona_documento: "header"
+    descripcion: "Ordering or attending physician"
+    patrones_esperados: ["physician", "dr.", "md"]
+    peso: 2
+
+  - nombre_zona: "fecha_servicio"
+    tipo_contenido: "fecha"
+    zona_documento: "header"
+    descripcion: "Date of service, collection or report"
+    patron_regex: "\\d{1,2}[/-]\\d{1,2}[/-]\\d{2,4}"
+    peso: 3
+
+  - nombre_zona: "resultados"
+    tipo_contenido: "texto"
+    zona_documento: "body"
+    descripcion: "Test results, findings or values with reference ranges"
+    patrones_esperados: ["result", "reference", "findings", "test"]
+    min_chars: 20
+    peso: 3
+
+reglas_contenido:
+  - id_regla: "RC-DLR-001"
+    zona_documento: "body"
+    tipo: "keyword"
+    patron: ["result", "findings"]
+    obligatoria: true
+    mensaje_error: "No test results or findings found"
+    peso: 3
+
+  - id_regla: "RC-DLR-002"
+    zona_documento: "header"
+    tipo: "keyword"
+    patron: ["mrn", "patient id", "accession"]
+    obligatoria: true
+    mensaje_error: "No patient identifier (MRN/Patient ID/Accession) found"
+    peso: 3
+
+reglas_coherencia:
+  - id_regla: "RCH-DLR-001"
+    tipo: "campo_presente_si"
+    campo_origen: "resultados"
+    campo_destino: "medico_solicitante"
+    condicion: "If test results are present, an ordering/attending physician should be identified"
+    mensaje_error: "There are test results but no ordering physician was found"
+    peso: 2

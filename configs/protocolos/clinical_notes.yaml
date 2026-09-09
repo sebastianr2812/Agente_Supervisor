@@ -1,0 +1,78 @@
+id_protocolo: "CN-001"
+version: "1.0"
+proceso_sanitario: "general"
+tipo_documento: "clinical_notes"
+fecha_vigencia: "2024-01-01"
+base_legal: "N/A (documento en ingles, family: Clinical Notes - fuente: ClinOCR-Bench templates T4 (Clinical Visit Note), T5 (Admission Note))"
+idioma: "eng"
+
+campos_obligatorios:
+  - nombre_zona: "identificacion_centro"
+    tipo_contenido: "texto"
+    zona_documento: "header"
+    descripcion: "Hospital or medical center name"
+    patrones_esperados: ["hospital", "medical center", "clinic"]
+    peso: 2
+
+  - nombre_zona: "identificacion_paciente"
+    tipo_contenido: "texto"
+    zona_documento: "header"
+    descripcion: "Patient name and date of birth"
+    patrones_esperados: ["dob", "date of birth", "patient"]
+    peso: 3
+
+  - nombre_zona: "motivo_consulta"
+    tipo_contenido: "texto"
+    zona_documento: "body"
+    descripcion: "Chief complaint or reason for visit"
+    patrones_esperados: ["chief complaint", "complaints", "reason for visit"]
+    min_chars: 15
+    peso: 3
+
+  - nombre_zona: "historia_medica"
+    tipo_contenido: "texto"
+    zona_documento: "body"
+    descripcion: "Medical history snapshot or care team notes"
+    patrones_esperados: ["medical history", "care team", "diagnosed", "physician"]
+    peso: 2
+
+  - nombre_zona: "equipo_asistencial"
+    tipo_contenido: "texto"
+    zona_documento: "body"
+    descripcion: "Attending physician"
+    patrones_esperados: ["physician", "dr.", "md"]
+    peso: 2
+
+reglas_contenido:
+  - id_regla: "RC-CN-001"
+    zona_documento: "body"
+    tipo: "keyword"
+    patron: ["chief complaint", "complaints", "reason for visit"]
+    obligatoria: true
+    mensaje_error: "No chief complaint or reason for visit found"
+    peso: 3
+
+  - id_regla: "RC-CN-002"
+    zona_documento: "header"
+    tipo: "keyword"
+    patron: ["dob", "date of birth"]
+    obligatoria: true
+    mensaje_error: "No date of birth found for the patient"
+    peso: 3
+
+reglas_coherencia:
+  - id_regla: "RCH-CN-001"
+    tipo: "campo_presente_si"
+    campo_origen: "motivo_consulta"
+    campo_destino: "historia_medica"
+    condicion: "If a chief complaint is present, some medical history context should follow"
+    mensaje_error: "There is a chief complaint but no medical history context was found"
+    peso: 2
+
+  - id_regla: "RCH-CN-002"
+    tipo: "texto_coherente"
+    campo_origen: "motivo_consulta"
+    campo_destino: "historia_medica"
+    condicion: "The medical history should be clinically coherent with the chief complaint"
+    mensaje_error: "The medical history does not seem coherent with the chief complaint"
+    peso: 3
