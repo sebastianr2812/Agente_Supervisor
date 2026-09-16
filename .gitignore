@@ -16,3 +16,13 @@ Thumbs.db
 # Temporales
 *.tmp
 TFM_PathwayGuard_working.docx
+
+# Herramientas historicas / de redaccion de la memoria: se conservan en
+# local para referencia propia, pero no forman parte del producto
+# entregable (PathwayGuard) ni estan actualizadas respecto a la version
+# final, asi que no se versionan en el repositorio publico.
+docx_helpers.py
+guia_practica_tfm.md
+notebooks/
+scripts/
+.vscode/

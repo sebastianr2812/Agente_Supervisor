@@ -24,9 +24,6 @@ langgraph==0.2.60
 # Protocolos y configuracion
 PyYAML==6.0.2
 
-# Generacion de las hojas de calculo de revision humana (scripts/build_human_review_sample.py)
-openpyxl==3.1.5
-
 # Interfaz web
 streamlit==1.59.2
 
