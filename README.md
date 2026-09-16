@@ -63,6 +63,11 @@ escaneado y pulsa "Validate document".
 .\venv\Scripts\python.exe run_supervisor.py <ruta_imagen> <protocolo_id> --use-llm
 ```
 
-Protocolos disponibles: `CN-001` (notas clínicas), `DLR-001` (informes diagnósticos y de
-laboratorio), `MED-001` (listas de medicación), `ADM-001` (formularios de admisión),
-`PREOP-001` (formularios preoperatorios).
+Por defecto usa `configs/protocolos_es`, el conjunto en español evaluado en la memoria.
+Protocolos disponibles: `CN-001-ES` (notas clínicas), `DLR-001-ES` (informes diagnósticos y de
+laboratorio), `MED-001-ES` (listas de medicación), `ADM-001-ES` (formularios de admisión),
+`PREOP-001-ES` (formularios preoperatorios).
+
+Para ejecutar contra los protocolos en inglés usados en la prueba de integración sobre
+ClinOCR-Bench (sección 5.11.1 de la memoria), añade `--protocols-dir configs/protocolos`
+y usa los IDs sin sufijo (`CN-001`, `DLR-001`, `MED-001`, `ADM-001`, `PREOP-001`).

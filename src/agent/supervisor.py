@@ -24,6 +24,7 @@ class SupervisorState:
 
     document_path: str = ""
     protocol_id: str = ""
+    protocols_dir: str = "configs/protocolos"
     use_llm: bool = False
 
     ocr_result: Any = None
@@ -44,7 +45,8 @@ def ocr_step(state: dict[str, Any]) -> dict[str, Any]:
         return state
 
     try:
-        protocol = ProtocolLoader().get_protocol(state["protocol_id"])
+        protocols_dir = state.get("protocols_dir", "configs/protocolos")
+        protocol = ProtocolLoader(protocols_dir=protocols_dir).get_protocol(state["protocol_id"])
         lang = (protocol or {}).get("idioma", "spa")
         ocr_result = extract_text_blocks(state["document_path"], lang=lang)
         signatures = detect_signatures(state["document_path"])
@@ -66,7 +68,8 @@ def rule_validation_step(state: dict[str, Any]) -> dict[str, Any]:
         return state
 
     try:
-        loader = ProtocolLoader()
+        protocols_dir = state.get("protocols_dir", "configs/protocolos")
+        loader = ProtocolLoader(protocols_dir=protocols_dir)
         protocol = loader.get_protocol(state["protocol_id"])
         if protocol is None:
             return _append_error(
@@ -102,7 +105,8 @@ def llm_validation_step(state: dict[str, Any]) -> dict[str, Any]:
     protocol = state.get("protocol")
     if protocol is None:
         try:
-            protocol = ProtocolLoader().get_protocol(state["protocol_id"])
+            protocols_dir = state.get("protocols_dir", "configs/protocolos")
+            protocol = ProtocolLoader(protocols_dir=protocols_dir).get_protocol(state["protocol_id"])
         except Exception as exc:
             return _append_error(state, f"LLM setup error: {exc}")
 
@@ -254,13 +258,23 @@ def supervise_document(
     *,
     use_llm: bool = False,
     llm_client: Any = None,
+    protocols_dir: str = "configs/protocolos",
 ) -> dict[str, Any]:
-    """Ejecuta el pipeline completo sobre un documento."""
+    """Ejecuta el pipeline completo sobre un documento.
+
+    `protocols_dir` por defecto apunta al conjunto de protocolos en ingles
+    (usado por la prueba de integracion sobre ClinOCR-Bench). Para validar
+    contra los protocolos en espanol evaluados en la memoria (CN-001-ES,
+    DLR-001-ES, MED-001-ES, ADM-001-ES, PREOP-001-ES), pasa
+    protocols_dir="configs/protocolos_es" -- que es lo que hace run_supervisor.py
+    por defecto.
+    """
     graph = build_supervisor_graph()
     initial_state: dict[str, Any] = {
         "document_path": document_path,
         "protocol_id": protocol_id,
         "use_llm": use_llm,
+        "protocols_dir": protocols_dir,
         "errors": [],
     }
     if llm_client is not None:

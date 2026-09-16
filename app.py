@@ -11,7 +11,11 @@ import tempfile
 from pathlib import Path
 
 os.chdir(Path(__file__).resolve().parent)
-os.environ.setdefault("TESSDATA_PREFIX", r"C:\Users\tcana\AppData\Local\tessdata")
+# TESSDATA_PREFIX: solo se fija si no viene ya definida por el entorno. No se
+# hardcodea una ruta de una maquina de desarrollo concreta; si tu instalacion
+# de Tesseract no encuentra sus datos de idioma por defecto, exporta la
+# variable de entorno antes de lanzar la app (p. ej. en Windows:
+# $env:TESSDATA_PREFIX = "C:\ruta\a\tessdata").
 
 import streamlit as st
 

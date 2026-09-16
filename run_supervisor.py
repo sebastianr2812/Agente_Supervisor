@@ -1,9 +1,12 @@
 """
 CLI para ejecutar el agente supervisor sobre un documento.
 
+Por defecto usa los protocolos en espanol (configs/protocolos_es) evaluados
+en la memoria: CN-001-ES, DLR-001-ES, MED-001-ES, ADM-001-ES, PREOP-001-ES.
+
 Uso:
-    python run_supervisor.py <imagen> <protocolo_id>
-    python run_supervisor.py <imagen> <protocolo_id> --use-llm
+    python run_supervisor.py <imagen> CN-001-ES
+    python run_supervisor.py <imagen> CN-001-ES --use-llm
 """
 from __future__ import annotations
 
@@ -28,7 +31,20 @@ def parse_args() -> argparse.Namespace:
         description="Ejecuta el agente supervisor de documentacion sanitaria.",
     )
     parser.add_argument("image_path", help="Ruta de la imagen o PDF a validar.")
-    parser.add_argument("protocol_id", help="ID del protocolo YAML. Ejemplo: CI-001.")
+    parser.add_argument(
+        "protocol_id",
+        help="ID del protocolo YAML. Ejemplo: CN-001-ES (ver --protocols-dir).",
+    )
+    parser.add_argument(
+        "--protocols-dir",
+        default="configs/protocolos_es",
+        help=(
+            "Directorio de protocolos YAML. Por defecto configs/protocolos_es "
+            "(el conjunto en espanol evaluado en la memoria). Usa "
+            "configs/protocolos para los protocolos en ingles de la prueba "
+            "de integracion sobre ClinOCR-Bench."
+        ),
+    )
     parser.add_argument(
         "--use-llm",
         action="store_true",
@@ -75,7 +91,7 @@ def main() -> int:
 
     console.print("\n[bold]Agente Supervisor de Documentacion Sanitaria[/bold]")
     console.print(f"Documento: {image_path}")
-    console.print(f"Protocolo: {args.protocol_id}")
+    console.print(f"Protocolo: {args.protocol_id} ({args.protocols_dir})")
     if args.use_llm:
         llm_label = _llm_label(args)
     else:
@@ -92,6 +108,7 @@ def main() -> int:
             args.protocol_id,
             use_llm=args.use_llm,
             llm_client=llm_client,
+            protocols_dir=args.protocols_dir,
         )
 
     _print_report(report)

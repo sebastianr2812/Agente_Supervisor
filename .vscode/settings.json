@@ -1,7 +1,4 @@
 {
     "python.defaultInterpreterPath": "${workspaceFolder}\\venv\\Scripts\\python.exe",
-    "python.terminal.activateEnvironment": true,
-    "terminal.integrated.env.windows": {
-        "TESSDATA_PREFIX": "C:\\Users\\tcana\\AppData\\Local\\tessdata"
-    }
+    "python.terminal.activateEnvironment": true
 }

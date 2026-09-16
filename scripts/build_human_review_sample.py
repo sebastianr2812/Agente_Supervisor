@@ -14,7 +14,10 @@ import os
 import sys
 from pathlib import Path
 
-os.environ.setdefault("TESSDATA_PREFIX", r"C:\Users\tcana\AppData\Local\tessdata")
+# TESSDATA_PREFIX: solo se fija si no viene ya definida por el entorno. No se
+# hardcodea una ruta de una maquina de desarrollo concreta; si tu instalacion
+# de Tesseract no encuentra sus datos de idioma por defecto, exporta la
+# variable de entorno antes de ejecutar este script.
 
 ROOT_DIR = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT_DIR))
