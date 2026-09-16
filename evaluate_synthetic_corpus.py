@@ -14,7 +14,7 @@ del corpus sintetico y calcula todas las metricas requeridas:
   - Metricas de deteccion de firmas y casillas (P/R/F1)
   - Evaluacion de zonificacion
   - Intervalos de confianza bootstrap
-  - Ablacion: solo reglas vs reglas+LLM vs reglas+VL
+  - Ablacion: solo reglas vs reglas+LLM vs reglas+LLM+VL
 
 Uso:
   python evaluate_synthetic_corpus.py --corpus-dir data/synthetic_corpus_v2
@@ -214,7 +214,7 @@ def run_pipeline_on_document(image_path: str, protocol: dict,
     IMPORTANTE: el veredicto final se calcula reutilizando la logica oficial
     de combinacion de src/agent/supervisor.py (_combined_verdict), no una
     logica ad-hoc. Esto asegura que la ablacion "reglas" vs "reglas+LLM" vs
-    "reglas+VL" mida realmente el efecto de anadir cada capa semantica sobre
+    "reglas+LLM+VL" mida realmente el efecto de anadir cada capa semantica sobre
     el veredicto, tal como se combinan en el agente real, en vez de calcular
     resultados de LLM/VL que luego se descartan sin influir en el veredicto.
     """
@@ -1000,7 +1000,7 @@ def evaluate_vl_standalone(corpus_dir: str, protocols_dir: str,
 
     Esto mide la capacidad del componente visual por si mismo, sin la
     limitacion estructural de la logica de combinacion usada en
-    "reglas+VL" (que solo puede degradar un veredicto de las reglas, nunca
+    "reglas+LLM+VL" (que solo puede degradar un veredicto de las reglas, nunca
     mejorarlo) — permite comparar su kappa de 3 clases directamente contra
     "reglas" y "reglas+LLM" en igualdad de condiciones.
 
@@ -1180,33 +1180,43 @@ def run_ablation(corpus_dir: str, protocols_dir: str,
                  output_dir: str = None, limit: int = None,
                  vl_limit: int = 25, partition: str = "all") -> dict:
     """
-    Ejecuta ablacion completa: reglas solas, reglas+LLM, reglas+VL.
-    Compara las tres configuraciones SOBRE LA MISMA MUESTRA de documentos,
-    para que la tabla comparativa sea valida (misma base en las tres filas).
+    Ejecuta ablacion completa: reglas solas, reglas+LLM, reglas+LLM+VL --
+    las tres configuraciones citadas en la memoria (tablas de metricas
+    globales, precision/exhaustividad/F1 y matrices de confusion). Compara
+    las tres SOBRE LA MISMA MUESTRA de documentos, para que la tabla
+    comparativa sea valida (misma base en las tres filas).
+
+    IMPORTANTE -- para reproducir los numeros exactos citados en la memoria
+    (kappa = 0,84 / 0,93 / 0,93 sobre la particion de evaluacion, n=115),
+    esta funcion debe llamarse con partition="eval" y vl_limit=115 (o el
+    tamano real de esa particion), es decir SIN submuestreo. El resultado
+    final del TFM se obtuvo asi, no con el `vl_limit` por defecto de esta
+    funcion. Con los valores por defecto (`vl_limit=25`), esta ablacion es
+    una vista previa rapida, no el experimento reportado.
 
     Por defecto, "reglas" y "reglas+LLM" tambien se evaluan sobre la muestra
     de `vl_limit` documentos (no sobre el corpus completo), precisamente
-    para poder comparar las tres filas de forma justa. El corpus completo
-    (75 docs) ya se evaluo por separado en el Paso 2 con solo reglas.
+    para poder comparar las tres filas de forma justa.
 
     `vl_limit` por defecto es 25 = 5 familias x 5 estados, lo que garantiza
     UNA muestra con cobertura completa de todas las combinaciones familia x
     estado (incluyendo la clase "valid", que con muestras mas pequenas puede
     quedar fuera por completo y distorsionar la sensibilidad/especificidad).
     Qwen2.5-VL puede tardar ~2 minutos por imagen en CPU (ver docstring de
-    QwenVLClient); usa --vl-limit 75 solo si dispones de tiempo/GPU.
+    QwenVLClient); usa --vl-limit 115 (con --partition eval) solo si
+    dispones de varias horas o GPU, para reproducir el resultado citado.
 
     `limit`: si se especifica explicitamente, fuerza un tamano de muestra
-    distinto para "reglas"/"reglas+LLM" (por ejemplo --limit 75 para usar
-    el corpus completo en esas dos filas y solo aplicar el submuestreo a
-    reglas+VL) a costa de que la comparacion entre filas deje de ser
+    distinto para "reglas"/"reglas+LLM" (por ejemplo --limit 115 para usar
+    la particion completa en esas dos filas y solo aplicar el submuestreo a
+    reglas+LLM+VL) a costa de que la comparacion entre filas deje de ser
     estrictamente sobre los mismos documentos.
     """
     baseline_limit = limit if limit is not None else vl_limit
     configs = [
         ("reglas", False, False, baseline_limit),
         ("reglas+LLM", True, False, baseline_limit),
-        ("reglas+VL", False, True, vl_limit),
+        ("reglas+LLM+VL", True, True, vl_limit),
     ]
 
     all_results = {}
@@ -1282,7 +1292,7 @@ def main():
     )
     parser.add_argument(
         "--ablation", action="store_true",
-        help="Ejecutar ablacion completa (reglas, reglas+LLM, reglas+VL)"
+        help="Ejecutar ablacion completa (reglas, reglas+LLM, reglas+LLM+VL)"
     )
     parser.add_argument(
         "--limit", type=int, default=None,
@@ -1291,7 +1301,7 @@ def main():
     parser.add_argument(
         "--vl-limit", type=int, default=25,
         help="Tamano de muestra para la ablacion (25 = 5 familias x 5 estados, cobertura completa). "
-             "Se usa para las 3 configs (reglas/reglas+LLM/reglas+VL) salvo que --limit indique otro valor "
+             "Se usa para las 3 configs (reglas/reglas+LLM/reglas+LLM+VL) salvo que --limit indique otro valor "
              "para las dos primeras. Qwen2.5-VL es lento en CPU (~2min/doc en el peor caso)."
     )
     parser.add_argument(

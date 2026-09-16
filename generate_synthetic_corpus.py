@@ -7,12 +7,13 @@ Genera documentos clinicos sinteticos en espanol como imagenes PNG,
 con defectos controlados y ground truth completo para evaluar el agente
 supervisor de extremo a extremo.
 
-Estructura (v4, diseno de 150 documentos):
-  - 5 familias documentales x 30 documentos = 150 documentos base
-  - Cada familia: 15 documentos de desarrollo (layout A/B, cosmetico) +
-    15 documentos de evaluacion final (layout C, cabecera ampliada y firma
-    lateral), balanceados 5/5/5 por veredicto (valido/incompleto/incoherente)
-    en cada particion. Ver SUBSTATE_PLAN.
+Estructura (v5, diseno de 230 documentos):
+  - 5 familias documentales, 230 documentos en total (entre 36 y 50 por
+    familia segun cuantos estados adicionales de FAMILY_ONLY_STATES le
+    aplican), repartidos en 115 de desarrollo (layout A/B, cosmetico) +
+    115 de evaluacion final (layout C, cabecera ampliada y firma lateral).
+    Ver SUBSTATE_PLAN (base comun a las 5 familias) y FAMILY_ONLY_STATES
+    (estados adicionales que solo aplican a un subconjunto de familias).
   - Ground truth JSON con: veredicto esperado, campos, firmas, casillas,
     defectos, particion (dev/eval) y plantilla (A/B/C) de cada documento
   - Imagenes PNG a 150 DPI simulando documentos escaneados
@@ -1817,12 +1818,15 @@ STATES = [
 # para alergia) -- ver FAMILY_ONLY_STATES mas abajo, que restringe estos
 # dos ultimos a sus familias aplicables en vez de generarlos en las 5.
 
-# Version 4 (diseno de 150 documentos / particion dev-eval): cada substate
+# Diseno base comun a las 5 familias (particion dev-eval): cada substate
 # granular (usado internamente por cada generador para decidir que campo
 # omitir o que incoherencia introducir) se reparte en (dev, eval). Los
-# totales por familia dan 15 dev + 15 eval = 30, y a nivel de veredicto de
-# 3 clases (valid/incomplete/inconsistent) cada particion queda balanceada
-# en 5/5/5 por familia (25/25/25 en el corpus completo de 150 documentos).
+# totales por familia dan 18 dev + 18 eval = 36 documentos base, y a nivel
+# de veredicto de 3 clases (valid/incomplete/inconsistent) cada particion
+# queda balanceada por familia. FAMILY_ONLY_STATES anade documentos extra
+# solo a las familias donde aplica cada estado adicional (ver mas abajo),
+# lo que hace que el total real por familia varie entre 36 y 50 y el
+# corpus completo llegue a 230 documentos (115 dev + 115 eval).
 # La particion NO se resuelve por variante de layout cosmetico (A/B, que
 # comparten exactamente las mismas fracciones de zona que la heuristica de
 # PathwayGuard): los documentos "eval" se generan siempre en layout "C"
@@ -1872,8 +1876,9 @@ def _plan_for(state: str, family_id: str) -> tuple[int, int] | None:
 def generate_corpus(output_dir: str, seed: int = 42,
                     scan_artifacts: bool = True, scan_intensity: str = "light"):
     """
-    Genera el corpus completo: 150 documentos (30 por familia = 15 dev +
-    15 eval, 5/5/5 por veredicto en cada particion).
+    Genera el corpus completo: 230 documentos (115 dev + 115 eval; entre 36
+    y 50 documentos por familia segun los estados adicionales de
+    FAMILY_ONLY_STATES que le apliquen -- ver SUBSTATE_PLAN mas arriba).
 
     Args:
         output_dir: Directorio de salida
