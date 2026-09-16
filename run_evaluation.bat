@@ -31,11 +31,31 @@ if /i "%ABLATION%"=="S" (
 
 echo.
 echo ============================================================
-echo  PASO 4: Generar figuras
+echo  PASO 4: Generar figuras (a partir del resultado mas completo
+echo  disponible: reglas+LLM+VL si se ejecuto la ablacion en el
+echo  Paso 3, si no reglas+LLM, si no reglas solas)
 echo ============================================================
-for %%f in (data\results\synthetic\eval_reglas_*.json) do (
-    echo Visualizando %%f ...
-    python visualize_evaluation.py --results-file "%%f" --output-dir figures
+set "RESULTS_FILE="
+for /f "delims=" %%f in ('dir /b /o-d "data\results\synthetic\eval_reglas+LLM+VL_*.json" 2^>nul') do (
+    if not defined RESULTS_FILE set "RESULTS_FILE=%%f"
+)
+if defined RESULTS_FILE goto :visualize
+
+for /f "delims=" %%f in ('dir /b /o-d "data\results\synthetic\eval_reglas+LLM_*.json" 2^>nul') do (
+    if not defined RESULTS_FILE set "RESULTS_FILE=%%f"
+)
+if defined RESULTS_FILE goto :visualize
+
+for /f "delims=" %%f in ('dir /b /o-d "data\results\synthetic\eval_reglas_*.json" 2^>nul') do (
+    if not defined RESULTS_FILE set "RESULTS_FILE=%%f"
+)
+
+:visualize
+if not defined RESULTS_FILE (
+    echo No se encontro ningun archivo de resultados en data\results\synthetic\
+) else (
+    echo Visualizando data\results\synthetic\%RESULTS_FILE% ...
+    python visualize_evaluation.py --results-file "data\results\synthetic\%RESULTS_FILE%" --output-dir figures
 )
 
 echo.
