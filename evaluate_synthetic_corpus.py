@@ -326,9 +326,9 @@ def run_pipeline_on_document(image_path: str, protocol: dict,
 
     # vl_identity_rescue: mismo principio que vl_date_rescue, para
     # "identidad_duplicada". REACTIVADO (2026-09-07): se habia descartado
-    # con qwen2.5vl:3b (ver historial en apuntes_hallazgos.md) tras un falso
-    # positivo real -- el modelo de 3B no se restringia de forma fiable a
-    # numeros de identificacion, devolvia dosis de medicacion, nombres,
+    # con qwen2.5vl:3b tras un falso positivo real -- el modelo de 3B no se
+    # restringia de forma fiable a numeros de identificacion, devolvia
+    # dosis de medicacion, nombres,
     # numeros de colegiado y fechas como si fueran "identificadores"
     # distintos. Comparado directamente contra qwen2.5vl:7b (mismo prompt,
     # mismos documentos): el modelo de 7B devuelve UNICAMENTE los 2 NHC
