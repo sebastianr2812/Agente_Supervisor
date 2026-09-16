@@ -603,14 +603,16 @@ def evaluate_corpus(corpus_dir: str, protocols_dir: str,
 
     if partition != "all":
         # d.get("partition", partition) == partition haria que un
-        # documento SIN campo "partition" (corpus antiguo, ej.
-        # data/synthetic_corpus antes del diseno v4) pasara el filtro
-        # SIEMPRE, sin importar que particion se pida -- se detecto que
-        # esto hacia que "--partition eval" se ejecutara en silencio sobre
-        # el corpus antiguo completo (75/75 documentos) en vez de fallar o
-        # avisar, invalidando la metrica sin ningun error visible. Ahora
-        # un documento sin ese campo se EXCLUYE explicitamente en vez de
-        # incluirse por defecto.
+        # documento SIN campo "partition" (corpus antiguo y ya en desuso,
+        # data/synthetic_corpus anterior al diseno v4 -- NO el corpus
+        # sintetico actual de 230 documentos, data/synthetic_corpus_v2,
+        # donde todo documento tiene ese campo) pasara el filtro SIEMPRE,
+        # sin importar que particion se pida -- se detecto que esto hacia
+        # que "--partition eval" se ejecutara en silencio sobre aquel
+        # corpus antiguo completo (75/75 documentos, deprecado) en vez de
+        # fallar o avisar, invalidando la metrica sin ningun error
+        # visible. Ahora un documento sin ese campo se EXCLUYE
+        # explicitamente en vez de incluirse por defecto.
         docs = [d for d in docs if d.get("partition") == partition]
         print(f"Particion seleccionada: '{partition}' -> {len(docs)} documentos")
 
@@ -1016,14 +1018,16 @@ def evaluate_vl_standalone(corpus_dir: str, protocols_dir: str,
 
     if partition != "all":
         # d.get("partition", partition) == partition haria que un
-        # documento SIN campo "partition" (corpus antiguo, ej.
-        # data/synthetic_corpus antes del diseno v4) pasara el filtro
-        # SIEMPRE, sin importar que particion se pida -- se detecto que
-        # esto hacia que "--partition eval" se ejecutara en silencio sobre
-        # el corpus antiguo completo (75/75 documentos) en vez de fallar o
-        # avisar, invalidando la metrica sin ningun error visible. Ahora
-        # un documento sin ese campo se EXCLUYE explicitamente en vez de
-        # incluirse por defecto.
+        # documento SIN campo "partition" (corpus antiguo y ya en desuso,
+        # data/synthetic_corpus anterior al diseno v4 -- NO el corpus
+        # sintetico actual de 230 documentos, data/synthetic_corpus_v2,
+        # donde todo documento tiene ese campo) pasara el filtro SIEMPRE,
+        # sin importar que particion se pida -- se detecto que esto hacia
+        # que "--partition eval" se ejecutara en silencio sobre aquel
+        # corpus antiguo completo (75/75 documentos, deprecado) en vez de
+        # fallar o avisar, invalidando la metrica sin ningun error
+        # visible. Ahora un documento sin ese campo se EXCLUYE
+        # explicitamente en vez de incluirse por defecto.
         docs = [d for d in docs if d.get("partition") == partition]
         print(f"Particion seleccionada: '{partition}' -> {len(docs)} documentos")
 

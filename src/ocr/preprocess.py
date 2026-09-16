@@ -163,10 +163,9 @@ def preprocess_document(image_path: str, denoise: bool = False,
     Pipeline completo de preprocesamiento.
     Retorna imagen binaria lista para OCR.
 
-    El parametro `denoise` esta desactivado por defecto: la
-    evaluacion integral sobre el corpus sintetico (75 documentos,
-    5 familias) demostro que remove_noise() con kernel_size=3
-    aplicado tras la binarizacion destruye el texto en fuentes
+    El parametro `denoise` esta desactivado por defecto: la evaluacion
+    integral sobre el corpus sintetico demostro que remove_noise() con
+    kernel_size=3 aplicado tras la binarizacion destruye el texto en fuentes
     normales, reduciendo la tasa de deteccion de campos de forma
     generalizada (ver detalle en el docstring del modulo). Se deja
     como parametro opcional para poder reactivarlo de forma
